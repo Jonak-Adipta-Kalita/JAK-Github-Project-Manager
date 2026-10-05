@@ -16,3 +16,7 @@
     - [ ] Move from one directory to another
     - [ ] Remove from Github
     - [ ] Start with Boiler plate codes
+
+## Challenge
+- No use of AI except to search for modules
+- Only googling is allowed, try to implement everything yourself
