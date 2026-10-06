@@ -23,6 +23,8 @@ func main() {
 
 	if mode == 3 {
 		CloneRepositories(entries)
+	} else {
+
 	}
 }
 
