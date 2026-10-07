@@ -41,10 +41,6 @@ func CloneRepositories(entries []os.DirEntry) {
 			continue
 		}
 
-		if f.IsDir() {
-			failed = append(failed, name)
-		}
-
 		fmt.Printf("Cloning %s\n", name)
 
 		url := fmt.Sprintf("git@github.com:Jonak-Adipta-Kalita/%s.git", name)
@@ -55,7 +51,7 @@ func CloneRepositories(entries []os.DirEntry) {
 		if err := cmd.Run(); err != nil {
 			log.Printf("Failed to clone %s: %v\n\n", name, err)
 
-			// failed = append(failed, name)
+			failed = append(failed, name)
 		} else {
 			fmt.Printf("Cloned %s\n\n", name)
 			

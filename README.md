@@ -4,8 +4,7 @@
 - Note down the Projects as needed for the Blogs tehe
 
 ## Todo
-- [ ] Git Clone the Projects
-[JAK-Angry-Birds-Game JAK-Dooms-Day-Clock-for-Archie JAK-Four-In-A-Row-Game JAK-Gesture-Controlled-Presentation-Prog JAK-Github-Readme-Profile JAK-King's-Curse-Game JAK-Legend-Of-Zelda-Game-Resurrection-Of-Malus JAK-New-Year's-Eve-Countdown-Timer JAK-Password-Generator-1 JAK-Snake-And-Ladder-Game JAK-Waste-Classifier-Prog JAK-Wood-Of-YPress-Game]
+- [x] Git Clone the Projects
 
 - [ ] Group Sorter
     - [ ] Move from one directory to the grouped directory
@@ -27,6 +26,7 @@
 - Tutorials for Python (and then group them)
 - Hello World & FizzBuzz Projects
 - Computer Vision Projects
+- .bat Projects
 
 - Stolen Projects & their technologies (gotta learn them ;)) (man all the "games" ehe they are all stolen mhm)
 
