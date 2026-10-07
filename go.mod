@@ -3,6 +3,7 @@ module github.com/Jonak-Adipta-Kalita/JAK-Github-Project-Manager
 go 1.26.5
 
 require charm.land/bubbletea/v2 v2.0.10
+require charm.land/lipgloss/v2 v2.0.6
 
 require (
 	github.com/aymanbagabas/go-udiff v0.3.1 // indirect

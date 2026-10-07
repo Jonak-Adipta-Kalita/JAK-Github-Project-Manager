@@ -6,7 +6,7 @@
 ## Todo
 - [x] Git Clone the Projects
 
-- [ ] TUI
+- [ ] TUI (Charm Bubbletea & Lipgloss)
     - [ ] List out the Projects in a Grid View
     - [ ] Select Multiple
 
