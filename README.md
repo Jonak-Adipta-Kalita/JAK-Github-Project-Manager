@@ -6,6 +6,10 @@
 ## Todo
 - [x] Git Clone the Projects
 
+- [ ] TUI
+    - [ ] List out the Projects in a Grid View
+    - [ ] Select Multiple
+
 - [ ] Group Sorter
     - [ ] Move from one directory to the grouped directory
     - [ ] Remove from Github
