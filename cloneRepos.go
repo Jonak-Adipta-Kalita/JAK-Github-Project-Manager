@@ -10,13 +10,24 @@ import (
 	"strings"
 )
 
+func getClonedDirs() []string {
+	projects := GetProjectsDirs()
+	cloned := make([]string, len(projects))
+
+	for _, project := range projects {
+		cloned = append(cloned, project.Title())
+	}
+
+	return cloned
+}
+
 func CloneRepositories() {
 	original, err := os.ReadDir("/home/jonak/Projects/Sorting/Main")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cloned := GetProjectsDirs()
+	cloned := getClonedDirs()
 
 	var failed []string
 

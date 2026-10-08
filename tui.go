@@ -1,23 +1,65 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"log"
 
+	// "charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
-type model struct {
-	cursor   int
-	choices  []string
-	selected map[int]struct{}
+type styles struct {
+	app           lipgloss.Style
+	title         lipgloss.Style
+	statusMessage lipgloss.Style
 }
 
-func initialModel(choices []string) model {
-	return model{
-		choices:  choices,
-		selected: make(map[int]struct{}),
+func newStyles() styles {
+	return styles{
+		app: lipgloss.NewStyle().
+			Padding(1, 2),
+		title: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFFDF5")).
+			Background(lipgloss.Color("#25A065")).
+			Padding(0, 1),
+		statusMessage: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#04B575")),
 	}
+}
+
+type model struct {
+	styles        styles
+	height, width int
+	list          list.Model
+}
+
+func initialModel() model {
+	m := model{}
+	m.styles = newStyles()
+
+	projects := GetProjectsDirs()
+	projectItems := make([]list.Item, len(projects))
+	for i, project := range projects {
+		projectItems[i] = project
+	}
+
+	delegate := list.NewDefaultDelegate()
+
+	projectList := list.New(projectItems, delegate, 0, 0)
+	projectList.Title = "Choose Projects"
+	projectList.Styles.Title = m.styles.title
+
+	m.list = projectList
+
+	return m
+}
+
+func (m *model) updateListProperties() {
+	h, v := m.styles.app.GetFrameSize()
+	m.list.SetSize(m.width-h, m.height-v)
+	m.list.Styles.Title = m.styles.title
 }
 
 func (m model) Init() tea.Cmd {
@@ -25,62 +67,30 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "enter", "space":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
-			}
-		}
+	case tea.WindowSizeMsg:
+		m.width, m.height = msg.Width, msg.Height
+		m.updateListProperties()
+		return m, nil
 	}
 
-	return m, nil
+	newListModel, cmd := m.list.Update(msg)
+	m.list = newListModel
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() tea.View {
-	s := "Select the Projects\n\n"
-
-	for i, choice := range m.choices {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
-		}
-
-		checked := " "
-		if _, ok := m.selected[i]; ok {
-			checked = "x"
-		}
-
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
-	}
-
-	s += "\nPress q to quit\n"
-
-	v := tea.NewView(s)
-	v.WindowTitle = "JAK Github Project Manager"
+	v := tea.NewView(m.styles.app.Render(m.list.View()))
 	v.AltScreen = true
-
 	return v
 }
 
 func Tui() {
-	projects := GetProjectsDirs()
-
-	p := tea.NewProgram(initialModel(projects))
+	p := tea.NewProgram(initialModel())
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("Error in TUI: %v", err)
 	}

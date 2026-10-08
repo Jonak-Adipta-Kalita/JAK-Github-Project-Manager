@@ -11,14 +11,19 @@ func ReplaceName(name string) string {
 	return strings.ReplaceAll(name, " ", "-")
 }
 
-func GetProjectsDirs() (projects []string) {
-	entries, err := os.ReadDir("/home/jonak/Projects/Sorting/Main-Clones/")
+func GetProjectsDirs() (projects []projectItem) {
+	path := "/home/jonak/Projects/Sorting/Main-Clones/"
+
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, f := range entries {
-		projects = append(projects, f.Name())
+		projects = append(projects, projectItem{
+			title: f.Name(),
+			path:  path + f.Name(),
+		})
 	}
 
 	return projects
