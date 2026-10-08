@@ -37,6 +37,10 @@ func main() {
 	if mode == 3 {
 		CloneRepositories()
 	} else {
-		Tui()
+		selected := Tui()
+		if len(selected) == 0 {
+			fmt.Println("\nSelect the Projects too...")
+			os.Exit(1)
+		}
 	}
 }

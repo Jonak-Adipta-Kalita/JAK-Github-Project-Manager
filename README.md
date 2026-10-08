@@ -6,9 +6,9 @@
 ## Todo
 - [x] Git Clone the Projects
 
-- [ ] TUI (Charm Bubbletea & Lipgloss)
-    - [ ] List out the Projects in a Grid View
-    - [ ] Select Multiple
+- [x] TUI (Charm Bubbletea & Lipgloss)
+    - [x] List out the Projects in a Grid View
+    - [x] Select Multiple
 
 - [ ] Group Sorter
     - [ ] Move from one directory to the grouped directory
