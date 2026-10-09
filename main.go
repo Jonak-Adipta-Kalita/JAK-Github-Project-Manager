@@ -93,8 +93,23 @@ func GroupSorter(projectPaths []string) {
 
 	GithubRepoRemove(projectPaths, groupDir)
 
-	//TODO: intialize group git repository
-	//Thought: Actually, delete the old repo after the grouping is done (like, just do the repo removal later, the folder move is fine)
+	git := func(args ...string) error {
+		c := exec.Command("git", args...)
+		c.Dir = groupDir
+		c.Stdout, c.Stderr = os.Stdout, os.Stderr
+		return c.Run()
+	}
+
+	for _, args := range [][]string{
+		{"init", "-b", "main"},
+		{"add", "."},
+		{"commit", "-m", "Grouped Projects <3"},
+	} {
+		if err := git(args...); err != nil {
+			log.Printf("git %s failed: %v", args[0], err)
+			return
+		}
+	}
 
 	for _, p := range projectPaths {
 		os.RemoveAll(filepath.Join(groupDir, filepath.Base(p), ".git"))
@@ -113,7 +128,7 @@ func GroupSorter(projectPaths []string) {
 }
 
 func main() {
-	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter (for single-file based projects)\n2) Remover\n3) Git Clone\n>> ")
+	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter\n2) Remover\n3) Git Clone\n>> ")
 	var mode uint8
 	fmt.Scan(&mode)
 
@@ -132,7 +147,7 @@ func main() {
 			fmt.Println("Select the Projects too...")
 			os.Exit(1)
 		} else {
-			fmt.Printf("Selected: %v", selected)
+			fmt.Printf("Selected: %v\n\n", selected)
 		}
 
 		if mode == 1 {
