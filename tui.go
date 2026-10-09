@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os/exec"
 	"sort"
+	"syscall"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
@@ -11,14 +13,13 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-// TODO: Open the folder in nvim in one of the keys
-
 type styles struct {
 	app lipgloss.Style
 }
 
 type keyMap struct {
 	toggle  key.Binding
+	open    key.Binding
 	confirm key.Binding
 }
 
@@ -42,9 +43,13 @@ func initialModel() model {
 			key.WithKeys("space"),
 			key.WithHelp("space", "toggle"),
 		),
-		confirm: key.NewBinding(
+		open: key.NewBinding(
 			key.WithKeys("enter"),
-			key.WithHelp("enter", "confirm"),
+			key.WithHelp("enter", "open in yazi"),
+		),
+		confirm: key.NewBinding(
+			key.WithKeys("alt+o"),
+			key.WithHelp("alt+o", "confirm"),
 		),
 	}
 
@@ -63,7 +68,7 @@ func initialModel() model {
 	projectList.SetShowTitle(false)
 	projectList.DisableQuitKeybindings()
 	projectList.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{m.keys.toggle, m.keys.confirm}
+		return []key.Binding{m.keys.toggle, m.keys.open, m.keys.confirm}
 	}
 
 	m.list = projectList
@@ -77,6 +82,17 @@ func (m *model) updateListProperties() {
 }
 
 func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func openInYazi(path string) error {
+	cmd := exec.Command("kitty", "yazi", path)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	go cmd.Wait()
 	return nil
 }
 
@@ -112,6 +128,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list.CursorDown()
 			status := m.list.NewStatusMessage(fmt.Sprintf("%d selected", len(m.selected)))
 			return m, status
+		case key.Matches(msg, m.keys.open):
+			it, ok := m.list.SelectedItem().(projectItem)
+			if !ok {
+				return m, nil
+			}
+			if err := openInYazi(it.path); err != nil {
+				return m, m.list.NewStatusMessage("Error: " + err.Error())
+			}
+			return m, m.list.NewStatusMessage("Opened " + it.title + " in yazi")
 		case key.Matches(msg, m.keys.confirm):
 			m.confirmed = true
 			return m, tea.Quit
