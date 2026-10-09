@@ -22,12 +22,18 @@ func getClonedDirs() []string {
 }
 
 func CloneRepositories() {
-	original, err := os.ReadDir("/home/jonak/Projects/Sorting/Main")
+	original, err := os.ReadDir(os.Getenv("LIST_DIR"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	cloned := getClonedDirs()
+
+	err = os.MkdirAll(filepath.Dir(os.Getenv("PROJECT_DIR")), 0755)
+	if err != nil {
+		fmt.Printf("Failed to create destination directories: %v\n", err)
+		return
+	}
 
 	var failed []string
 
@@ -46,8 +52,8 @@ func CloneRepositories() {
 
 		fmt.Printf("Cloning %s\n", name)
 
-		url := fmt.Sprintf("git@github.com:Jonak-Adipta-Kalita/%s.git", name)
-		cmd := exec.Command("git", "-C", "/home/jonak/Projects/Sorting/Main-Clones", "clone", url)
+		url := fmt.Sprintf("git@github.com:%s/%s.git", os.Getenv("GITHUB_USERNAME"), name)
+		cmd := exec.Command("git", "-C", os.Getenv("PROJECT_DIR"), "clone", url)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
@@ -59,7 +65,7 @@ func CloneRepositories() {
 			fmt.Printf("Cloned %s\n\n", name)
 
 			if f.IsDir() {
-				err := os.RemoveAll(fmt.Sprintf("/home/jonak/Projects/Sorting/Main/%v", f.Name()))
+				err := os.RemoveAll(fmt.Sprintf("%s/%v", os.Getenv("LIST_DIR"), f.Name()))
 				if err != nil {
 					fmt.Printf("Failed to delete folder %s: %v\n", f.Name(), err)
 				}
@@ -68,5 +74,5 @@ func CloneRepositories() {
 	}
 
 	fmt.Println()
-	fmt.Println(failed)
+	fmt.Println("Failed: %v", failed)
 }
