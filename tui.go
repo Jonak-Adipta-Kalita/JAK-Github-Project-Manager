@@ -11,6 +11,8 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
+// TODO: Open the folder in nvim in one of the keys
+
 type styles struct {
 	app lipgloss.Style
 }

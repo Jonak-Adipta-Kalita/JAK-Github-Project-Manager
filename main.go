@@ -49,7 +49,7 @@ func GetProjectsDirs() (projects []projectItem) {
 	return projects
 }
 
-func GithubRepoAction(projectPaths []string, folderPath, action string) {
+func GithubRepoRemove(projectPaths []string, folderPath string) {
 	var failed []string
 
 	err := os.MkdirAll(folderPath, 0755)
@@ -70,12 +70,13 @@ func GithubRepoAction(projectPaths []string, folderPath, action string) {
 
 		repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), name)
 
-		cmd := exec.Command("gh", "repo", action, repo, "--yes")
+		cmd := exec.Command("gh", "repo", "delete", repo, "--yes")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
 		if err := cmd.Run(); err != nil {
-			log.Printf("Failed to %s repository %s", action, repo)
+			log.Printf("Failed to delete repository %s", repo)
+			failed = append(failed, projectPath)
 		}
 	}
 
@@ -83,8 +84,36 @@ func GithubRepoAction(projectPaths []string, folderPath, action string) {
 	fmt.Printf("Failed: %v\n", failed)
 }
 
+func GroupSorter(projectPaths []string) {
+	var groupName string
+	fmt.Print("Group Name (No Whitespace): ")
+	fmt.Scan(&groupName)
+
+	groupDir := filepath.Join(os.Getenv("GROUP_DIR"), groupName)
+
+	GithubRepoRemove(projectPaths, groupDir)
+
+	//TODO: intialize group git repository
+	//Thought: Actually, delete the old repo after the grouping is done (like, just do the repo removal later, the folder move is fine)
+
+	for _, p := range projectPaths {
+		os.RemoveAll(filepath.Join(groupDir, filepath.Base(p), ".git"))
+	}
+
+	repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), groupName)
+	cmd := exec.Command("gh", "repo", "create", repo, "--private", "--source=.", "--remote=origin", "--push")
+
+	cmd.Dir = groupDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		log.Printf("Failed to create repository %s", repo)
+	}
+}
+
 func main() {
-	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter\n2) Remover\n3) Git Clone\n>> ")
+	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter (for single-file based projects)\n2) Remover\n3) Git Clone\n>> ")
 	var mode uint8
 	fmt.Scan(&mode)
 
@@ -109,7 +138,7 @@ func main() {
 		if mode == 1 {
 			GroupSorter(selected)
 		} else if mode == 2 {
-			GithubRepoAction(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"), "delete")
+			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"))
 		}
 	}
 }
