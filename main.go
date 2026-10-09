@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -48,6 +49,40 @@ func GetProjectsDirs() (projects []projectItem) {
 	return projects
 }
 
+func GithubRepoAction(projectPaths []string, folderPath, action string) {
+	var failed []string
+
+	err := os.MkdirAll(folderPath, 0755)
+	if err != nil {
+		fmt.Printf("Failed to create destination directories: %v\n", err)
+		return
+	}
+
+	for _, projectPath := range projectPaths {
+		name := filepath.Base(projectPath)
+
+		err := os.Rename(projectPath, filepath.Join(folderPath, name))
+		if err != nil {
+			fmt.Printf("Error moving folder: %v\n", err)
+			failed = append(failed, projectPath)
+			continue
+		}
+
+		repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), name)
+
+		cmd := exec.Command("gh", "repo", action, repo, "--yes")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			log.Printf("Failed to %s repository %s", action, repo)
+		}
+	}
+
+	fmt.Println()
+	fmt.Printf("Failed: %v\n", failed)
+}
+
 func main() {
 	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter\n2) Remover\n3) Git Clone\n>> ")
 	var mode uint8
@@ -72,8 +107,9 @@ func main() {
 		}
 
 		if mode == 1 {
+			GroupSorter(selected)
 		} else if mode == 2 {
-			GithubRemover(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"))
+			GithubRepoAction(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"), "delete")
 		}
 	}
 }
