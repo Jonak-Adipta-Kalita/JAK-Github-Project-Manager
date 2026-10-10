@@ -10,6 +10,15 @@ import (
 	"strings"
 )
 
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return err == nil && info.IsDir()
+}
+
 func getClonedDirs() []string {
 	projects := GetProjectsDirs()
 	cloned := make([]string, len(projects))

@@ -49,10 +49,10 @@ func GetProjectsDirs() (projects []projectItem) {
 	return projects
 }
 
-func GithubRepoRemove(projectPaths []string, folderPath string) {
+func GithubRepoRemove(projectPaths []string, destPath string) {
 	var failed []string
 
-	err := os.MkdirAll(folderPath, 0755)
+	err := os.MkdirAll(destPath, 0755)
 	if err != nil {
 		fmt.Printf("Failed to create destination directories: %v\n", err)
 		return
@@ -61,7 +61,7 @@ func GithubRepoRemove(projectPaths []string, folderPath string) {
 	for _, projectPath := range projectPaths {
 		name := filepath.Base(projectPath)
 
-		err := os.Rename(projectPath, filepath.Join(folderPath, name))
+		err := os.Rename(projectPath, filepath.Join(destPath, name))
 		if err != nil {
 			fmt.Printf("Error moving folder: %v\n", err)
 			failed = append(failed, projectPath)
@@ -93,6 +93,10 @@ func GroupSorter(projectPaths []string) {
 
 	GithubRepoRemove(projectPaths, groupDir)
 
+	for _, p := range projectPaths {
+		os.RemoveAll(filepath.Join(groupDir, filepath.Base(p), ".git"))
+	}
+
 	git := func(args ...string) error {
 		c := exec.Command("git", args...)
 		c.Dir = groupDir
@@ -100,19 +104,26 @@ func GroupSorter(projectPaths []string) {
 		return c.Run()
 	}
 
-	for _, args := range [][]string{
+	for i, args := range [][]string{
 		{"init", "-b", "main"},
 		{"add", "."},
 		{"commit", "-m", "Grouped Projects <3"},
+		{"push", "origin", "main"},
 	} {
+		if dirExists(groupDir) && i == 0 {
+			continue
+		} else if i == 3 {
+			continue
+		}
+
 		if err := git(args...); err != nil {
 			log.Printf("git %s failed: %v", args[0], err)
 			return
 		}
 	}
 
-	for _, p := range projectPaths {
-		os.RemoveAll(filepath.Join(groupDir, filepath.Base(p), ".git"))
+	if dirExists(groupDir) {
+		return
 	}
 
 	repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), groupName)
@@ -128,7 +139,7 @@ func GroupSorter(projectPaths []string) {
 }
 
 func main() {
-	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter\n2) Remover\n3) Git Clone\n>> ")
+	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter\n2) Remover\n3) Git Clone\n4) Just Browse Projects\n>> ")
 	var mode uint8
 	fmt.Scan(&mode)
 
@@ -154,6 +165,8 @@ func main() {
 			GroupSorter(selected)
 		} else if mode == 2 {
 			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"))
+		} else if mode == 4 {
+			Tui()
 		}
 	}
 }
