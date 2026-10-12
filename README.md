@@ -19,6 +19,10 @@
     - [x] Move from one directory to another
     - [x] Remove from Github
 
+- [ ] Manager
+    - [ ] Rename Project
+    - [ ] Change Visibility of Project
+
 ## Challenge
 - No use of AI except to search for modules
 - Only googling is allowed, try to implement everything yourself
@@ -33,3 +37,10 @@
 - Stolen Projects & their technologies (gotta learn them ;)) (man all the "games" ehe they are all stolen mhm)
 
 - Public Open Source Projects (like BYDPP ig?)
+
+## Process
+- Move through each project
+- If stolen: Remove it
+- If needs to be grouped, group with others
+- If needs to be renmaed, rename it
+- If you want to showcase it, make it public!
