@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -134,12 +135,32 @@ func GroupSorter(projectPaths []string) {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
-		log.Printf("Failed to create repository %s", repo)
+		log.Printf("Failed to create repository %s\n", repo)
 	}
 }
 
+func MakePublic(projectPaths []string) {
+	var failed []string
+
+	for _, projectPath := range projectPaths {
+		name := filepath.Base(projectPath)
+		repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), name)
+
+		cmd := exec.Command("gh", "repo", "edit", repo, "--visibility", "public", "--accept-visibility-consequences")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			log.Printf("Failed to make the repository %s public\n", repo)
+		}
+	}
+
+	fmt.Println()
+	fmt.Printf("Failed: %v\n", failed)
+}
+
 func main() {
-	fmt.Print("Which Mode do you want to enter?\n1) Group Sorter\n2) Remover\n3) Git Clone\n4) Just Browse Projects\n>> ")
+	fmt.Print("Which Mode do you want to enter?\n1) Git Clone\n2) Just Browse\n3) Group Sorter \n4) Make Public\n5) Remove\n\n>> ")
 	var mode uint8
 	fmt.Scan(&mode)
 
@@ -148,25 +169,29 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	if mode == 3 {
+	if !slices.Contains([]uint8{1, 2, 3, 4, 5}, mode) {
+		log.Fatal("Select one of 1, 2, 3, 4, 5")
+	}
+
+	if mode == 1 {
 		CloneRepositories()
 	} else {
 		selected := Tui()
 		fmt.Println()
 
-		if len(selected) == 0 {
+		if mode != 2 && len(selected) == 0 {
 			fmt.Println("Select the Projects too...")
 			os.Exit(1)
 		} else {
 			fmt.Printf("Selected: %v\n\n", selected)
 		}
 
-		if mode == 1 {
+		if mode == 3 {
 			GroupSorter(selected)
-		} else if mode == 2 {
-			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"))
 		} else if mode == 4 {
-			Tui()
+			MakePublic(selected)
+		} else if mode == 5 {
+			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"))
 		}
 	}
 }

@@ -9,18 +9,21 @@ import (
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
 
 type styles struct {
-	app lipgloss.Style
+	app   lipgloss.Style
+	modal lipgloss.Style
 }
 
 type keyMap struct {
 	toggle  key.Binding
 	open    key.Binding
 	confirm key.Binding
+	rename  key.Binding
 }
 
 type model struct {
@@ -28,6 +31,8 @@ type model struct {
 	keys          keyMap
 	height, width int
 	list          list.Model
+	renaming      bool
+	renameModal   renameModalTUI
 	selected      map[string]struct{}
 	confirmed     bool
 }
@@ -36,6 +41,10 @@ func initialModel() model {
 	m := model{}
 	m.styles = styles{
 		app: lipgloss.NewStyle().Padding(1, 2),
+		modal: lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#25A065")).
+			Padding(1, 2),
 	}
 
 	m.keys = keyMap{
@@ -50,6 +59,10 @@ func initialModel() model {
 		confirm: key.NewBinding(
 			key.WithKeys("alt+o"),
 			key.WithHelp("alt+o", "confirm"),
+		),
+		rename: key.NewBinding(
+			key.WithKeys("r"),
+			key.WithHelp("r", "rename in github"),
 		),
 	}
 
@@ -68,10 +81,14 @@ func initialModel() model {
 	projectList.SetShowTitle(false)
 	projectList.DisableQuitKeybindings()
 	projectList.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{m.keys.toggle, m.keys.open, m.keys.confirm}
+		return []key.Binding{m.keys.toggle, m.keys.open, m.keys.rename, m.keys.confirm}
 	}
 
 	m.list = projectList
+
+	renameModal := textinput.New()
+	m.renameModal.model = renameModal
+	m.renameModal.Setup()
 
 	return m
 }
@@ -97,6 +114,10 @@ func openInYazi(path string) error {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.renaming {
+		return m.renameModal.UpdateRename(msg, m)
+	}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
@@ -137,6 +158,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.list.NewStatusMessage("Error: " + err.Error())
 			}
 			return m, m.list.NewStatusMessage("Opened " + it.title + " in yazi")
+		case key.Matches(msg, m.keys.rename):
+			_, ok := m.list.SelectedItem().(projectItem)
+			if !ok {
+				return m, nil
+			}
+			//TODO
 		case key.Matches(msg, m.keys.confirm):
 			m.confirmed = true
 			return m, tea.Quit
