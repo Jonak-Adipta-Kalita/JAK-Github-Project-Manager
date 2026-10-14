@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"syscall"
 	"time"
@@ -171,7 +173,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err := openInYazi(it.path); err != nil {
 				return m, m.list.NewStatusMessage("Error: " + err.Error())
 			}
-			return m, m.list.NewStatusMessage("Opened " + it.title + " in yazi")
+			cmd := exec.Command("xdg-open", fmt.Sprintf("https://github.com/%s/%s", os.Getenv("GITHUB_USERNAME"), filepath.Base(it.path)))
+			if err := cmd.Run(); err != nil {
+				log.Printf("Can't open in Browser")
+				return m, m.list.NewStatusMessage("Error: " + err.Error())
+			}
+			return m, m.list.NewStatusMessage("Opened " + it.title + " in yazi & browser")
 
 		case key.Matches(msg, m.keys.rename):
 			it, ok := m.list.SelectedItem().(projectItem)
