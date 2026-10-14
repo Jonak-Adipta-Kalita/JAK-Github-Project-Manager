@@ -19,9 +19,9 @@
     - [x] Move from one directory to another
     - [x] Remove from Github
 
-- [ ] Manager
-    - [ ] Rename Project
-    - [ ] Change Visibility of Project
+- [x] Manager
+    - [x] Rename Project
+    - [x] Change Visibility of Project
 
 ## Challenge
 - No use of AI except to search for modules
@@ -30,11 +30,11 @@
 ## Document (i think i have OCD)
 - Showcaseable & good self-projects
 - Web Clones
-- Tutorials for Python (and then group them)
+- [x] Tutorials for Python (and then group them)
 - Computer Vision Projects
 - .bat Projects
 
-- Stolen Projects & their technologies (gotta learn them ;)) (man all the "games" ehe they are all stolen mhm)
+- Stolen Projects & their technologies (gotta learn them ;)) (man all the "games")
 
 - Public Open Source Projects (like BYDPP ig?)
 
@@ -44,3 +44,8 @@
 - If needs to be grouped, group with others
 - If needs to be renmaed, rename it
 - If you want to showcase it, make it public!
+
+### Club Together
+- The Pokedexes
+- The Mughal Empire Programs
+- Turtle Special Gifts

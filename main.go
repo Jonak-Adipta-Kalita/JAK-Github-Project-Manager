@@ -146,7 +146,7 @@ func MakePublic(projectPaths []string) {
 		name := filepath.Base(projectPath)
 		repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), name)
 
-		cmd := exec.Command("gh", "repo", "edit", repo, "--visibility", "public", "--accept-visibility-consequences")
+		cmd := exec.Command("gh", "repo", "edit", repo, "--visibility", "public", "--accept-visibility-change-consequences")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"sort"
 	"syscall"
+	"time"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
@@ -17,6 +18,7 @@ import (
 type styles struct {
 	app   lipgloss.Style
 	modal lipgloss.Style
+	title lipgloss.Style
 }
 
 type keyMap struct {
@@ -31,7 +33,6 @@ type model struct {
 	keys          keyMap
 	height, width int
 	list          list.Model
-	renaming      bool
 	renameModal   renameModalTUI
 	selected      map[string]struct{}
 	confirmed     bool
@@ -41,6 +42,10 @@ func initialModel() model {
 	m := model{}
 	m.styles = styles{
 		app: lipgloss.NewStyle().Padding(1, 2),
+		title: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFFDF5")).
+			Background(lipgloss.Color("#25A065")).
+			Padding(0, 1),
 		modal: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#25A065")).
@@ -78,8 +83,12 @@ func initialModel() model {
 	delegate := list.NewDefaultDelegate()
 
 	projectList := list.New(projectItems, delegate, 0, 0)
-	projectList.SetShowTitle(false)
+	projectList.Title = "Projects"
+	projectList.Styles.Title = m.styles.title
+	projectList.StatusMessageLifetime = 4 * time.Second
+
 	projectList.DisableQuitKeybindings()
+
 	projectList.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{m.keys.toggle, m.keys.open, m.keys.rename, m.keys.confirm}
 	}
@@ -114,8 +123,11 @@ func openInYazi(path string) error {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if m.renaming {
-		return m.renameModal.UpdateRename(msg, m)
+	if d, ok := msg.(renameDoneMsg); ok {
+		return m.handleRenameDone(d)
+	}
+	if m.renameModal.renaming {
+		return m.updateRename(msg)
 	}
 
 	switch msg := msg.(type) {
@@ -135,6 +147,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
+
 		switch {
 		case key.Matches(msg, m.keys.toggle):
 			it, ok := m.list.SelectedItem().(projectItem)
@@ -149,6 +162,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list.CursorDown()
 			status := m.list.NewStatusMessage(fmt.Sprintf("%d selected", len(m.selected)))
 			return m, status
+
 		case key.Matches(msg, m.keys.open):
 			it, ok := m.list.SelectedItem().(projectItem)
 			if !ok {
@@ -158,12 +172,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.list.NewStatusMessage("Error: " + err.Error())
 			}
 			return m, m.list.NewStatusMessage("Opened " + it.title + " in yazi")
+
 		case key.Matches(msg, m.keys.rename):
-			_, ok := m.list.SelectedItem().(projectItem)
+			it, ok := m.list.SelectedItem().(projectItem)
 			if !ok {
 				return m, nil
 			}
-			//TODO
+
+			m.renameModal.renaming = true
+			m.renameModal.oldName = it.title
+			m.renameModal.oldPath = it.path
+			m.renameModal.error = ""
+			m.renameModal.model.SetValue(it.title)
+			m.renameModal.model.CursorEnd()
+			focusCmd := m.renameModal.model.Focus()
+
+			return m, focusCmd
+
 		case key.Matches(msg, m.keys.confirm):
 			m.confirmed = true
 			return m, tea.Quit
@@ -177,13 +202,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() tea.View {
-	v := tea.NewView(m.styles.app.Render(m.list.View()))
-	v.AltScreen = true
+	var content string
+	if m.renameModal.renaming {
+		content = m.renameView()
+	} else {
+		content = m.styles.app.Render(m.list.View())
+	}
 
+	v := tea.NewView(content)
+	v.AltScreen = true
 	return v
 }
 
 func Tui() []string {
+	f, err := tea.LogToFile("debug.log", "debug")
+	if err != nil {
+		log.Fatalf("can't open log file: %v", err)
+	}
+	defer f.Close()
+
 	p := tea.NewProgram(initialModel())
 	final, err := p.Run()
 	if err != nil {
