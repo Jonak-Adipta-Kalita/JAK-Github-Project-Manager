@@ -23,6 +23,8 @@
     - [x] Rename Project
     - [x] Change Visibility of Project
 
+- [ ] Ability to manage offline and trigger the changes when online (save it to a file)
+
 ## Challenge
 - No use of AI except to search for modules
 - Only googling is allowed, try to implement everything yourself
@@ -48,4 +50,3 @@
 ### Club Together
 - The Pokedexes
 - The Mughal Empire Programs
-- Turtle Special Gifts
