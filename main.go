@@ -3,14 +3,27 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
+
+func checkOfflineMode() bool {
+	conn, err := net.DialTimeout("tcp", "1.1.1.53:53", 3*time.Second)
+	if err != nil {
+		log.Printf("error in hitting cloudflare: %v", err)
+		return true
+	}
+
+	defer conn.Close()
+	return false
+}
 
 type projectItem struct {
 	title    string
@@ -50,7 +63,7 @@ func GetProjectsDirs() (projects []projectItem) {
 	return projects
 }
 
-func GithubRepoRemove(projectPaths []string, destPath string) {
+func GithubRepoRemove(projectPaths []string, destPath string, offlineMode bool) {
 	var failed []string
 
 	err := os.MkdirAll(destPath, 0755)
@@ -85,14 +98,14 @@ func GithubRepoRemove(projectPaths []string, destPath string) {
 	fmt.Printf("Failed: %v\n", failed)
 }
 
-func GroupSorter(projectPaths []string) {
+func GroupSorter(projectPaths []string, offlineMode bool) {
 	var groupName string
 	fmt.Print("Group Name (No Whitespace): ")
 	fmt.Scan(&groupName)
 
 	groupDir := filepath.Join(os.Getenv("GROUP_DIR"), groupName)
 
-	GithubRepoRemove(projectPaths, groupDir)
+	GithubRepoRemove(projectPaths, groupDir, offlineMode)
 
 	for _, p := range projectPaths {
 		os.RemoveAll(filepath.Join(groupDir, filepath.Base(p), ".git"))
@@ -139,7 +152,7 @@ func GroupSorter(projectPaths []string) {
 	}
 }
 
-func MakePublic(projectPaths []string) {
+func MakePublic(projectPaths []string, offlineMode bool) {
 	var failed []string
 
 	for _, projectPath := range projectPaths {
@@ -160,7 +173,12 @@ func MakePublic(projectPaths []string) {
 }
 
 func main() {
-	fmt.Print("Which Mode do you want to enter?\n1) Git Clone\n2) Just Browse\n3) Group Sorter \n4) Make Public\n5) Remove\n\n>> ")
+	offlineMode := checkOfflineMode()
+	if offlineMode {
+		fmt.Println("In Offline Mode, so changes will be saved to a script!\n")
+	}
+
+	fmt.Print("Which Mode do you want to enter?\n1) Git Clone\n2) Just Browse\n3) Group Sorter \n4) Make Public\n5) Remove\n6) Run Offline Scripts\n\n>> ")
 	var mode uint8
 	fmt.Scan(&mode)
 
@@ -174,9 +192,16 @@ func main() {
 	}
 
 	if mode == 1 {
+		if offlineMode {
+			fmt.Println("Come back later with Internet!")
+			return
+		}
+
 		CloneRepositories()
+	} else if mode == 6 {
+		ExecuteScript()
 	} else {
-		selected := Tui()
+		selected := Tui(offlineMode)
 		fmt.Println()
 
 		if mode != 2 && len(selected) == 0 {
@@ -187,11 +212,11 @@ func main() {
 		}
 
 		if mode == 3 {
-			GroupSorter(selected)
+			GroupSorter(selected, offlineMode)
 		} else if mode == 4 {
-			MakePublic(selected)
+			MakePublic(selected, offlineMode)
 		} else if mode == 5 {
-			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"))
+			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"), offlineMode)
 		}
 	}
 }

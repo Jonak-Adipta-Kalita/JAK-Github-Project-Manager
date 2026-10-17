@@ -221,7 +221,7 @@ func (m model) View() tea.View {
 	return v
 }
 
-func Tui() []string {
+func Tui(offlineMode bool) []string {
 	f, err := tea.LogToFile("debug.log", "debug")
 	if err != nil {
 		log.Fatalf("can't open log file: %v", err)
