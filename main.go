@@ -15,7 +15,7 @@ import (
 )
 
 func checkOfflineMode() bool {
-	conn, err := net.DialTimeout("tcp", "1.1.1.53:53", 3*time.Second)
+	conn, err := net.DialTimeout("tcp", "8.8.8.8:53", 3*time.Second)
 	if err != nil {
 		log.Printf("error in hitting cloudflare: %v", err)
 		return true
@@ -187,8 +187,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	if !slices.Contains([]uint8{1, 2, 3, 4, 5}, mode) {
-		log.Fatal("Select one of 1, 2, 3, 4, 5")
+	if !slices.Contains([]uint8{1, 2, 3, 4, 5, 6}, mode) {
+		log.Fatal("Select one of 1, 2, 3, 4, 5, 6")
 	}
 
 	if mode == 1 {

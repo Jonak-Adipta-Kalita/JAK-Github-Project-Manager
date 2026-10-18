@@ -24,6 +24,7 @@
     - [x] Change Visibility of Project
 
 - [ ] Ability to manage offline and trigger the changes when online (save it to a file)
+- [ ] Rename Tutorial Projects to "Tutorial-" rather than "JAK-"
 
 ## Challenge
 - No use of AI except to search for modules
