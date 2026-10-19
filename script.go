@@ -59,8 +59,53 @@ func loadOfflineScript() ([]Entry, error) {
 	return entries, nil
 }
 
-func ExecuteOflineScript() {
+func ExecuteOfflineScript() {
+	entries, err := loadOfflineScript()
+	if err != nil {
+		log.Printf("Error in loading offling-mode script: %v", err)
+		return
+	}
 
+	for _, entry := range entries {
+		switch entry.Mode {
+		case ModeRename:
+			var a RenameArgs
+			if err := json.Unmarshal(entry.Args, &a); err != nil {
+				log.Printf("Error in unmarshaling args: %v", err)
+				return
+			}
+			renameProject(a.OldPath, a.NewName)
+		case ModeGroupSorter:
+			var a GroupSorterArgs
+			if err := json.Unmarshal(entry.Args, &a); err != nil {
+				log.Printf("Error in unmarshaling args: %v", err)
+				return
+			}
+			GroupSorter(a.Selected, a.GroupName)
+		case ModeRepoRemove:
+			var a RepoRemoveArgs
+			if err := json.Unmarshal(entry.Args, &a); err != nil {
+				log.Printf("Error in unmarshaling args: %v", err)
+				return
+			}
+			GithubRepoRemove(a.Selected, a.DestPath)
+		case ModeMakePublic:
+			var a MakePublicArgs
+			if err := json.Unmarshal(entry.Args, &a); err != nil {
+				log.Printf("Error in unmarshaling args: %v", err)
+				return
+			}
+			MakePublic(a.Selected)
+		}
+	}
+
+	err = os.Remove(filePath)
+	if err != nil && !os.IsNotExist(err) {
+		log.Printf("Error in removing offlin-mode file: %v", err)
+		return
+	}
+
+	fmt.Println("Executed the Offline Scripts! And cleared the file for future usage!")
 }
 
 func PutInOfflineScript(mode Mode, args any) {

@@ -197,7 +197,7 @@ func main() {
 
 		CloneRepositories()
 	} else if mode == 6 {
-		ExecuteOflineScript()
+		ExecuteOfflineScript()
 	} else {
 		selected := Tui(offlineMode)
 		fmt.Println()

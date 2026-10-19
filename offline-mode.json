@@ -1,3 +1,16 @@
 [
- 
+  {
+    "mode": "MAKE_PUBLIC",
+    "args": {
+      "selected": [
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Calculator-Prog",
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Keyboard-Prog",
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Mouse-Prog",
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Mouse-Prog-2",
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Paint-App",
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Typing-Tutor-Prog",
+        "/home/jonak/Projects/Coding/Sorting/Main-Clones/JAK-AI-Velcro-Dart-Game"
+      ]
+    }
+  }
 ]
