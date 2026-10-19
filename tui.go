@@ -38,10 +38,13 @@ type model struct {
 	renameModal   renameModalTUI
 	selected      map[string]struct{}
 	confirmed     bool
+	offlineMode   bool
 }
 
-func initialModel() model {
+func initialModel(offlineMode bool) model {
 	m := model{}
+	m.offlineMode = offlineMode
+
 	m.styles = styles{
 		app: lipgloss.NewStyle().Padding(1, 2),
 		title: lipgloss.NewStyle().
@@ -228,7 +231,7 @@ func Tui(offlineMode bool) []string {
 	}
 	defer f.Close()
 
-	p := tea.NewProgram(initialModel())
+	p := tea.NewProgram(initialModel(offlineMode))
 	final, err := p.Run()
 	if err != nil {
 		log.Fatalf("Error in TUI: %v", err)

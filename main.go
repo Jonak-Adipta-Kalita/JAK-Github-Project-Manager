@@ -3,26 +3,28 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
+	// "net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
+	// "time"
 
 	"github.com/joho/godotenv"
 )
 
 func checkOfflineMode() bool {
-	conn, err := net.DialTimeout("tcp", "8.8.8.8:53", 3*time.Second)
-	if err != nil {
-		log.Printf("error in hitting cloudflare: %v", err)
-		return true
-	}
+	// conn, err := net.DialTimeout("tcp", "8.8.8.8:53", 3*time.Second)
+	// if err != nil {
+	// 	log.Printf("error in hitting cloudflare: %v", err)
+	// 	return true
+	// }
+	//
+	// defer conn.Close()
+	// return false
 
-	defer conn.Close()
-	return false
+	return true
 }
 
 type projectItem struct {
@@ -63,7 +65,7 @@ func GetProjectsDirs() (projects []projectItem) {
 	return projects
 }
 
-func GithubRepoRemove(projectPaths []string, destPath string, offlineMode bool) {
+func GithubRepoRemove(projectPaths []string, destPath string) {
 	var failed []string
 
 	err := os.MkdirAll(destPath, 0755)
@@ -98,14 +100,10 @@ func GithubRepoRemove(projectPaths []string, destPath string, offlineMode bool) 
 	fmt.Printf("Failed: %v\n", failed)
 }
 
-func GroupSorter(projectPaths []string, offlineMode bool) {
-	var groupName string
-	fmt.Print("Group Name (No Whitespace): ")
-	fmt.Scan(&groupName)
-
+func GroupSorter(projectPaths []string, groupName string) {
 	groupDir := filepath.Join(os.Getenv("GROUP_DIR"), groupName)
 
-	GithubRepoRemove(projectPaths, groupDir, offlineMode)
+	GithubRepoRemove(projectPaths, groupDir)
 
 	for _, p := range projectPaths {
 		os.RemoveAll(filepath.Join(groupDir, filepath.Base(p), ".git"))
@@ -152,7 +150,7 @@ func GroupSorter(projectPaths []string, offlineMode bool) {
 	}
 }
 
-func MakePublic(projectPaths []string, offlineMode bool) {
+func MakePublic(projectPaths []string) {
 	var failed []string
 
 	for _, projectPath := range projectPaths {
@@ -212,11 +210,28 @@ func main() {
 		}
 
 		if mode == 3 {
-			GroupSorter(selected, offlineMode)
+			var groupName string
+			fmt.Print("Group Name (No Whitespace): ")
+			fmt.Scan(&groupName)
+
+			if offlineMode {
+				PutInScript(ModeGroupSorter, selected, groupName)
+				return
+			}
+
+			GroupSorter(selected, groupName)
 		} else if mode == 4 {
-			MakePublic(selected, offlineMode)
+			if offlineMode {
+				PutInScript(ModeMakePublic, selected)
+				return
+			}
+			MakePublic(selected)
 		} else if mode == 5 {
-			GithubRepoRemove(selected, filepath.Join(os.Getenv("REMOVED_DIR"), "Stolen/"), offlineMode)
+			if offlineMode {
+				PutInScript(ModeRepoRemove, selected)
+				return
+			}
+			GithubRepoRemove(selected, os.Getenv("REMOVED_DIR"))
 		}
 	}
 }

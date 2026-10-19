@@ -82,7 +82,7 @@ func (m model) updateRename(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.renameModal.error = ""
 			m.renameModal.model.Blur()
 
-			return m, renameCmd(m.renameModal.oldPath, name)
+			return m, renameCmd(m.renameModal.oldPath, name, m.offlineMode)
 		}
 	}
 
@@ -150,8 +150,19 @@ func renameProject(oldPath, newName string) (string, error) {
 	return newPath, nil
 }
 
-func renameCmd(oldPath, newName string) tea.Cmd {
+func renameCmd(oldPath, newName string, offlineMode bool) tea.Cmd {
 	return func() tea.Msg {
+		if offlineMode {
+			PutInScript(ModeRename, oldPath, newName)
+
+			return renameDoneMsg{
+				oldPath: oldPath,
+				newPath: oldPath,
+				newName: newName,
+				err:     nil,
+			}
+		}
+
 		newPath, err := renameProject(oldPath, newName)
 
 		return renameDoneMsg{
