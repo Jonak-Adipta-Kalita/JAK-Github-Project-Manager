@@ -1,11 +1,13 @@
 package main
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 )
+
+var filePath string = "offline-mode.json"
 
 type Mode string
 
@@ -16,46 +18,77 @@ const (
 	ModeRepoRemove  Mode = "REPO_REMOVE"
 )
 
-func ExecuteScript() {
-	f, err := os.Open("offline-mode.jak")
-	if err != nil {
-		log.Printf("Error opening file: %v", err)
-		return
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	lineNum := 0
-
-	for scanner.Scan() {
-		lineNum++
-		line := scanner.Text()
-		fmt.Printf("%d: %s\n", lineNum, line)
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Printf("Error reading file at line %d: %v", lineNum+1, err)
-	}
+type Entry struct {
+	Mode Mode            `json:"mode"`
+	Args json.RawMessage `json:"args"`
 }
 
-func PutInScript(mode Mode, args ...any) {
-	content := fmt.Sprintf("%s", mode)
+type RenameArgs struct {
+	OldPath string `json:"old_path"`
+	NewName string `json:"new_name"`
+}
 
-	for _, a := range args {
-		content += fmt.Sprintf(" %v", a)
-	}
-	content += "\n"
+type GroupSorterArgs struct {
+	Selected  []string `json:"selected"`
+	GroupName string   `json:"group_name"`
+}
 
-	f, err := os.OpenFile("offline-mode.jak", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+type MakePublicArgs struct {
+	Selected []string `json:"selected"`
+}
+
+type RepoRemoveArgs struct {
+	Selected []string `json:"selected"`
+	DestPath string   `json:"dest_path"`
+}
+
+func loadOfflineScript() ([]Entry, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Printf("Error opening file: %v", err)
-		return
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	defer f.Close()
 
-	if _, err := f.WriteString(content); err != nil {
+	var entries []Entry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		return nil, err
+	}
+
+	return entries, nil
+}
+
+func ExecuteOflineScript() {
+
+}
+
+func PutInOfflineScript(mode Mode, args any) {
+	entries, err := loadOfflineScript()
+	if err != nil {
+		log.Printf("Error in loading offling-mode script: %v", err)
+	}
+
+	marshalledArgs, err := json.Marshal(args)
+	if err != nil {
+		log.Printf("Error in marshalling Args: %v", err)
+	}
+
+	newEntry := Entry{
+		Mode: mode,
+		Args: marshalledArgs,
+	}
+
+	entries = append(entries, newEntry)
+
+	out, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		log.Printf("Error marshalling entries: %v", err)
+	}
+
+	err = os.WriteFile(filePath, out, 0644)
+	if err != nil {
 		log.Printf("Error writing to file: %v", err)
-		return
 	}
 
 	fmt.Println("Stored to Offline-Mode file")

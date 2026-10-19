@@ -197,7 +197,7 @@ func main() {
 
 		CloneRepositories()
 	} else if mode == 6 {
-		ExecuteScript()
+		ExecuteOflineScript()
 	} else {
 		selected := Tui(offlineMode)
 		fmt.Println()
@@ -215,22 +215,27 @@ func main() {
 			fmt.Scan(&groupName)
 
 			if offlineMode {
-				PutInScript(ModeGroupSorter, selected, groupName)
+				PutInOfflineScript(ModeGroupSorter, GroupSorterArgs{
+					Selected:  selected,
+					GroupName: groupName,
+				})
 				return
 			}
 
 			GroupSorter(selected, groupName)
 		} else if mode == 4 {
 			if offlineMode {
-				PutInScript(ModeMakePublic, selected)
+				PutInOfflineScript(ModeMakePublic, MakePublicArgs{Selected: selected})
 				return
 			}
+
 			MakePublic(selected)
 		} else if mode == 5 {
 			if offlineMode {
-				PutInScript(ModeRepoRemove, selected)
+				PutInOfflineScript(ModeRepoRemove, RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
 				return
 			}
+
 			GithubRepoRemove(selected, os.Getenv("REMOVED_DIR"))
 		}
 	}

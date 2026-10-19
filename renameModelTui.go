@@ -153,7 +153,7 @@ func renameProject(oldPath, newName string) (string, error) {
 func renameCmd(oldPath, newName string, offlineMode bool) tea.Cmd {
 	return func() tea.Msg {
 		if offlineMode {
-			PutInScript(ModeRename, oldPath, newName)
+			PutInOfflineScript(ModeRename, RenameArgs{OldPath: oldPath, NewName: newName})
 
 			return renameDoneMsg{
 				oldPath: oldPath,
