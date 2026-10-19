@@ -23,7 +23,7 @@
     - [x] Rename Project
     - [x] Change Visibility of Project
 
-- [ ] Ability to manage offline and trigger the changes when online (save it to a file)
+- [x] Ability to manage offline and trigger the changes when online (save it to a file)
 - [ ] Rename Tutorial Projects to "Tutorial-" rather than "JAK-"
 
 ## Challenge
