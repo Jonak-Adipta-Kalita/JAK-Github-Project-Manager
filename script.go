@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +16,27 @@ const (
 	ModeRepoRemove  Mode = "REPO_REMOVE"
 )
 
-func ExecuteScript() {}
+func ExecuteScript() {
+	f, err := os.Open("offline-mode.jak")
+	if err != nil {
+		log.Printf("Error opening file: %v", err)
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	lineNum := 0
+
+	for scanner.Scan() {
+		lineNum++
+		line := scanner.Text()
+		fmt.Printf("%d: %s\n", lineNum, line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("Error reading file at line %d: %v", lineNum+1, err)
+	}
+}
 
 func PutInScript(mode Mode, args ...any) {
 	content := fmt.Sprintf("%s", mode)
