@@ -3,28 +3,26 @@ package main
 import (
 	"fmt"
 	"log"
-	// "net"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
-	// "time"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
 func checkOfflineMode() bool {
-	// conn, err := net.DialTimeout("tcp", "8.8.8.8:53", 3*time.Second)
-	// if err != nil {
-	// 	log.Printf("error in hitting cloudflare: %v", err)
-	// 	return true
-	// }
-	//
-	// defer conn.Close()
-	// return false
+	conn, err := net.DialTimeout("tcp", "8.8.8.8:53", 3*time.Second)
+	if err != nil {
+		log.Printf("error in hitting cloudflare: %v", err)
+		return true
+	}
 
-	return true
+	defer conn.Close()
+	return false
 }
 
 type projectItem struct {
