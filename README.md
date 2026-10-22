@@ -26,6 +26,8 @@
 - [x] Ability to manage offline and trigger the changes when online (save it to a file)
 - [ ] Rename Tutorial Projects to "Tutorial-" rather than "JAK-"
 
+- [ ] Setup Goroutines & Mutexes 
+
 ## Challenge
 - No use of AI except to search for modules
 - Only googling is allowed, try to implement everything yourself

@@ -157,7 +157,7 @@ func renameCmd(oldPath, newName string, scriptMode bool) tea.Cmd {
 
 			return renameDoneMsg{
 				oldPath: oldPath,
-				newPath: oldPath,
+				newPath: filepath.Join(filepath.Dir(oldPath), newName),
 				newName: newName,
 				err:     nil,
 			}
