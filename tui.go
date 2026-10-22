@@ -38,12 +38,12 @@ type model struct {
 	renameModal   renameModalTUI
 	selected      map[string]struct{}
 	confirmed     bool
-	offlineMode   bool
+	scriptMode    bool
 }
 
-func initialModel(offlineMode bool) model {
+func initialModel(scriptMode bool) model {
 	m := model{}
-	m.offlineMode = offlineMode
+	m.scriptMode = scriptMode
 
 	m.styles = styles{
 		app: lipgloss.NewStyle().Padding(1, 2),
@@ -224,14 +224,14 @@ func (m model) View() tea.View {
 	return v
 }
 
-func Tui(offlineMode bool) []string {
+func Tui(scriptMode bool) []string {
 	f, err := tea.LogToFile("debug.log", "debug")
 	if err != nil {
 		log.Fatalf("can't open log file: %v", err)
 	}
 	defer f.Close()
 
-	p := tea.NewProgram(initialModel(offlineMode))
+	p := tea.NewProgram(initialModel(scriptMode))
 	final, err := p.Run()
 	if err != nil {
 		log.Fatalf("Error in TUI: %v", err)

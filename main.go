@@ -169,12 +169,28 @@ func MakePublic(projectPaths []string) {
 }
 
 func main() {
-	offlineMode := checkOfflineMode()
-	if offlineMode {
-		fmt.Println("In Offline Mode, so changes will be saved to a script!\n")
-	}
+	var scriptMode bool
 
-	fmt.Print("Which Mode do you want to enter?\n1) Git Clone\n2) Just Browse\n3) Group Sorter \n4) Make Public\n5) Remove\n6) Run Offline Scripts\n\n>> ")
+	if checkOfflineMode() {
+		scriptMode = true
+		fmt.Println("In Offline Mode, so changes will be saved to a script!\n")
+	} else {
+		fmt.Print("1) Script Mode or 2) Interactive Mode? >> ")
+		var offlineInput uint8
+		fmt.Scan(&offlineInput)
+		fmt.Print("\n")
+
+		if offlineInput == 2 {
+			scriptMode = false
+			fmt.Println("Using Interactive Mode")
+		} else {
+			scriptMode = true
+			fmt.Println("Using Script Mode")
+		}
+	}
+	fmt.Println()
+
+	fmt.Print("Which Mode do you want to enter?\n\n1) Git Clone\n2) Just Browse\n\n3) Group Sorter \n4) Make Public\n5) Remove\n\n6) Run Offline Scripts\n\n>> ")
 	var mode uint8
 	fmt.Scan(&mode)
 
@@ -183,21 +199,19 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	if !slices.Contains([]uint8{1, 2, 3, 4, 5, 6}, mode) {
-		log.Fatal("Select one of 1, 2, 3, 4, 5, 6")
+	if !slices.Contains([]uint8{1, 2, 3, 4, 5}, mode) {
+		log.Fatal("Select one of 1, 2, 3, 4, 5")
 	}
 
 	if mode == 1 {
-		if offlineMode {
+		if scriptMode {
 			fmt.Println("Come back later with Internet!")
 			return
 		}
 
 		CloneRepositories()
-	} else if mode == 6 {
-		ExecuteOfflineScript()
 	} else {
-		selected := Tui(offlineMode)
+		selected := Tui(scriptMode)
 		fmt.Println()
 
 		if mode != 2 && len(selected) == 0 {
@@ -212,7 +226,7 @@ func main() {
 			fmt.Print("Group Name (No Whitespace): ")
 			fmt.Scan(&groupName)
 
-			if offlineMode {
+			if scriptMode {
 				PutInOfflineScript(ModeGroupSorter, GroupSorterArgs{
 					Selected:  selected,
 					GroupName: groupName,
@@ -222,14 +236,14 @@ func main() {
 
 			GroupSorter(selected, groupName)
 		} else if mode == 4 {
-			if offlineMode {
+			if scriptMode {
 				PutInOfflineScript(ModeMakePublic, MakePublicArgs{Selected: selected})
 				return
 			}
 
 			MakePublic(selected)
 		} else if mode == 5 {
-			if offlineMode {
+			if scriptMode {
 				PutInOfflineScript(ModeRepoRemove, RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
 				return
 			}
