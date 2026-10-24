@@ -25,26 +25,38 @@ const (
 	ModeRepoRemove  Mode = "REPO_REMOVE"
 )
 
+type Entry interface {
+	isArg()
+}
+
 type RenameArgs struct {
 	OldPath string `json:"old_path"`
 	NewName string `json:"new_name"`
 }
+
+func (RenameArgs) isArg() {}
 
 type GroupSorterArgs struct {
 	Selected  []string `json:"selected"`
 	GroupName string   `json:"group_name"`
 }
 
+func (GroupSorterArgs) isArg() {}
+
 type MakePublicArgs struct {
 	Selected []string `json:"selected"`
 }
+
+func (MakePublicArgs) isArg() {}
 
 type RepoRemoveArgs struct {
 	Selected []string `json:"selected"`
 	DestPath string   `json:"dest_path"`
 }
 
-func loadScript(filePath FileName) ([]json.RawMessage, error) {
+func (RepoRemoveArgs) isArg() {}
+
+func loadScript[T Entry](filePath FileName) ([]T, error) {
 	data, err := os.ReadFile(string(filePath))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -53,7 +65,7 @@ func loadScript(filePath FileName) ([]json.RawMessage, error) {
 		return nil, err
 	}
 
-	var entries []json.RawMessage
+	var entries []T
 	if err := json.Unmarshal(data, &entries); err != nil {
 		return nil, err
 	}
@@ -61,92 +73,85 @@ func loadScript(filePath FileName) ([]json.RawMessage, error) {
 	return entries, nil
 }
 
-func PutInScript(mode Mode, args any) {
-	var filePath FileName
-
-	switch mode {
-	case ModeRepoRemove:
-		filePath = REPO_REMOVE_FILE
-	case ModeMakePublic:
-		filePath = MAKE_PUBLIC_FILE
-	case ModeGroupSorter:
-		filePath = GROUP_SORTER_FILE
-	case ModeRename:
-		filePath = RENAME_FILE
-	default:
-		log.Fatal("wrong mode given to put in script")
+func appendToScript[T Entry](filePath FileName, arg T) {
+	err := os.MkdirAll(string(filePath), 0755)
+	if err != nil {
+		log.Printf("Error in creating parent folder: %v", err)
+		return
 	}
 
-	entries, err := loadScript(filePath)
+	entries, err := loadScript[T](filePath)
 	if err != nil {
 		log.Printf("Error in loading script: %v", err)
+		return
 	}
 
-	newEntry, err := json.Marshal(args)
-	if err != nil {
-		log.Printf("Error in marshalling Args: %v", err)
-	}
-
-	entries = append(entries, newEntry)
+	entries = append(entries, arg)
 
 	out, err := json.MarshalIndent(entries, "", "  ")
 	if err != nil {
 		log.Printf("Error marshalling entries: %v", err)
+		return
 	}
 
-	err = os.WriteFile(string(filePath), out, 0644)
-	if err != nil {
+	if err := os.WriteFile(string(filePath), out, 0644); err != nil {
 		log.Printf("Error writing to file: %v", err)
+		return
 	}
 
 	fmt.Println("Stored to Script file")
 }
 
+func PutInScript(args Entry) {
+	switch a := args.(type) {
+	case RepoRemoveArgs:
+		appendToScript(REPO_REMOVE_FILE, a)
+	case MakePublicArgs:
+		appendToScript(MAKE_PUBLIC_FILE, a)
+	case GroupSorterArgs:
+		appendToScript(GROUP_SORTER_FILE, a)
+	case RenameArgs:
+		appendToScript(RENAME_FILE, a)
+	default:
+		log.Fatal("unknown entry type given to PutInScript")
+	}
+}
+
+func runFile[T Entry](filePath FileName, run func(T)) error {
+	entries, err := loadScript[T](filePath)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		run(e)
+	}
+	if err := os.Remove(string(filePath)); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	fmt.Println("Executed", filePath, "and cleared the file")
+	return nil
+}
+
 func ExecuteScript() {
-	// entries, err := loadScript()
-	// if err != nil {
-	// 	log.Printf("Error in loading script: %v", err)
-	// 	return
-	// }
-	//
-	// for _, entry := range entries {
-	// 	switch entry.Mode {
-	// 	case ModeRepoRemove:
-	// 		var a RepoRemoveArgs
-	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
-	// 			log.Printf("Error in unmarshaling args: %v", err)
-	// 			return
-	// 		}
-	// 		GithubRepoRemove(a.Selected, a.DestPath)
-	// 	case ModeMakePublic:
-	// 		var a MakePublicArgs
-	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
-	// 			log.Printf("Error in unmarshaling args: %v", err)
-	// 			return
-	// 		}
-	// 		MakePublic(a.Selected)
-	// 	case ModeGroupSorter:
-	// 		var a GroupSorterArgs
-	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
-	// 			log.Printf("Error in unmarshaling args: %v", err)
-	// 			return
-	// 		}
-	// 		GroupSorter(a.Selected, a.GroupName)
-	// 	case ModeRename:
-	// 		var a RenameArgs
-	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
-	// 			log.Printf("Error in unmarshaling args: %v", err)
-	// 			return
-	// 		}
-	// 		renameProject(a.OldPath, a.NewName)
-	// 	}
-	// }
-	//
-	// err = os.Remove(filePath)
-	// if err != nil && !os.IsNotExist(err) {
-	// 	log.Printf("Error in removing script: %v", err)
-	// 	return
-	// }
-	//
-	// fmt.Println("Executed the Scripts! And cleared the file for future usage!")
+	steps := []func() error{
+		func() error {
+			return runFile(REPO_REMOVE_FILE, func(a RepoRemoveArgs) { GithubRepoRemove(a.Selected, a.DestPath) })
+		},
+		func() error {
+			return runFile(GROUP_SORTER_FILE, func(a GroupSorterArgs) { GroupSorter(a.Selected, a.GroupName) })
+		},
+		func() error {
+			return runFile(MAKE_PUBLIC_FILE, func(a MakePublicArgs) { MakePublic(a.Selected) })
+		},
+		func() error {
+			return runFile(RENAME_FILE, func(a RenameArgs) { RenameProject(a.OldPath, a.NewName) })
+		},
+	}
+
+	for _, step := range steps {
+		if err := step(); err != nil {
+			log.Printf("Error executing script: %v", err)
+			return
+		}
+	}
 }

@@ -1,1 +1,0 @@
-# JAK_Smart_Dustbin

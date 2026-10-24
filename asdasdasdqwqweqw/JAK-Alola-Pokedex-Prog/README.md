@@ -1,1 +1,0 @@
-# JAK-Alola-Pokedex-Prog

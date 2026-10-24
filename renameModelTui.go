@@ -123,7 +123,7 @@ type renameDoneMsg struct {
 	err     error
 }
 
-func renameProject(oldPath, newName string) (string, error) {
+func RenameProject(oldPath, newName string) (string, error) {
 	newPath := filepath.Join(filepath.Dir(oldPath), newName)
 	if _, err := os.Stat(newPath); err == nil {
 		return "", fmt.Errorf("folder %q already exists", newName)
@@ -153,7 +153,7 @@ func renameProject(oldPath, newName string) (string, error) {
 func renameCmd(oldPath, newName string, scriptMode bool) tea.Cmd {
 	return func() tea.Msg {
 		if scriptMode {
-			PutInScript(ModeRename, RenameArgs{OldPath: oldPath, NewName: newName})
+			PutInScript(RenameArgs{OldPath: oldPath, NewName: newName})
 
 			return renameDoneMsg{
 				oldPath: oldPath,
@@ -163,7 +163,7 @@ func renameCmd(oldPath, newName string, scriptMode bool) tea.Cmd {
 			}
 		}
 
-		newPath, err := renameProject(oldPath, newName)
+		newPath, err := RenameProject(oldPath, newName)
 
 		return renameDoneMsg{
 			oldPath: oldPath,

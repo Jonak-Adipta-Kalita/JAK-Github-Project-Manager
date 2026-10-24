@@ -196,7 +196,7 @@ func Main(mode uint8, scriptMode bool) {
 			fmt.Scan(&groupName)
 
 			if scriptMode {
-				PutInScript(ModeGroupSorter, GroupSorterArgs{
+				PutInScript(GroupSorterArgs{
 					Selected:  selected,
 					GroupName: groupName,
 				})
@@ -210,21 +210,20 @@ func Main(mode uint8, scriptMode bool) {
 			fmt.Scan(&doJAKToTutorial)
 
 			if scriptMode {
-				PutInScript(ModeMakePublic, MakePublicArgs{Selected: selected})
+				PutInScript(MakePublicArgs{Selected: selected})
 				return
 			}
 
 			MakePublic(selected)
 		} else if mode == 5 {
 			if scriptMode {
-				PutInScript(ModeRepoRemove, RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
+				PutInScript(RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
 				return
 			}
 
 			GithubRepoRemove(selected, os.Getenv("REMOVED_DIR"))
 		}
 	}
-
 }
 
 func main() {

@@ -1,1 +1,0 @@
-# JAK-Akinator-Game
