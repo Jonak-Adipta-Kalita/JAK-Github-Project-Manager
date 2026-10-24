@@ -227,6 +227,11 @@ func Main(mode uint8, scriptMode bool) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	var scriptMode bool
 	offlineMode := checkOfflineMode()
 
@@ -273,11 +278,6 @@ func main() {
 
 		var mode uint8
 		fmt.Scan(&mode)
-
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file")
-		}
 
 		if !slices.Contains(validModes, mode) {
 			log.Fatal(invalidModeMsg)
