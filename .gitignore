@@ -2,4 +2,5 @@ transfers/
 vendor/
 debug.log
 JAK-Github-Project-Manager
-offline-mode.json
+script-mode.json
+scripts/

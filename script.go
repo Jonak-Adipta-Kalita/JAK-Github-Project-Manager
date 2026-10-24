@@ -7,9 +7,14 @@ import (
 	"os"
 )
 
-var filePath string = "script-mode.json"
+type FileName string
 
-// TODO: Add an order to the file! Like, Publics first, Renames at the end... etc..
+const (
+	RENAME_FILE       FileName = "scripts/rename.json"
+	GROUP_SORTER_FILE FileName = "scripts/group_sorter.json"
+	MAKE_PUBLIC_FILE  FileName = "scripts/make_public.json"
+	REPO_REMOVE_FILE  FileName = "scripts/repo_remove.json"
+)
 
 type Mode string
 
@@ -19,11 +24,6 @@ const (
 	ModeMakePublic  Mode = "MAKE_PUBLIC"
 	ModeRepoRemove  Mode = "REPO_REMOVE"
 )
-
-type Entry struct {
-	Mode Mode            `json:"mode"`
-	Args json.RawMessage `json:"args"`
-}
 
 type RenameArgs struct {
 	OldPath string `json:"old_path"`
@@ -44,8 +44,8 @@ type RepoRemoveArgs struct {
 	DestPath string   `json:"dest_path"`
 }
 
-func loadScript() ([]Entry, error) {
-	data, err := os.ReadFile(filePath)
+func loadScript(filePath FileName) ([]json.RawMessage, error) {
+	data, err := os.ReadFile(string(filePath))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -53,7 +53,7 @@ func loadScript() ([]Entry, error) {
 		return nil, err
 	}
 
-	var entries []Entry
+	var entries []json.RawMessage
 	if err := json.Unmarshal(data, &entries); err != nil {
 		return nil, err
 	}
@@ -61,69 +61,30 @@ func loadScript() ([]Entry, error) {
 	return entries, nil
 }
 
-func ExecuteScript() {
-	entries, err := loadScript()
-	if err != nil {
-		log.Printf("Error in loading offling-mode script: %v", err)
-		return
-	}
-
-	for _, entry := range entries {
-		switch entry.Mode {
-		case ModeRename:
-			var a RenameArgs
-			if err := json.Unmarshal(entry.Args, &a); err != nil {
-				log.Printf("Error in unmarshaling args: %v", err)
-				return
-			}
-			renameProject(a.OldPath, a.NewName)
-		case ModeGroupSorter:
-			var a GroupSorterArgs
-			if err := json.Unmarshal(entry.Args, &a); err != nil {
-				log.Printf("Error in unmarshaling args: %v", err)
-				return
-			}
-			GroupSorter(a.Selected, a.GroupName)
-		case ModeRepoRemove:
-			var a RepoRemoveArgs
-			if err := json.Unmarshal(entry.Args, &a); err != nil {
-				log.Printf("Error in unmarshaling args: %v", err)
-				return
-			}
-			GithubRepoRemove(a.Selected, a.DestPath)
-		case ModeMakePublic:
-			var a MakePublicArgs
-			if err := json.Unmarshal(entry.Args, &a); err != nil {
-				log.Printf("Error in unmarshaling args: %v", err)
-				return
-			}
-			MakePublic(a.Selected)
-		}
-	}
-
-	err = os.Remove(filePath)
-	if err != nil && !os.IsNotExist(err) {
-		log.Printf("Error in removing offlin-mode file: %v", err)
-		return
-	}
-
-	fmt.Println("Executed the Scripts! And cleared the file for future usage!")
-}
-
 func PutInScript(mode Mode, args any) {
-	entries, err := loadScript()
-	if err != nil {
-		log.Printf("Error in loading offling-mode script: %v", err)
+	var filePath FileName
+
+	switch mode {
+	case ModeRepoRemove:
+		filePath = REPO_REMOVE_FILE
+	case ModeMakePublic:
+		filePath = MAKE_PUBLIC_FILE
+	case ModeGroupSorter:
+		filePath = GROUP_SORTER_FILE
+	case ModeRename:
+		filePath = RENAME_FILE
+	default:
+		log.Fatal("wrong mode given to put in script")
 	}
 
-	marshalledArgs, err := json.Marshal(args)
+	entries, err := loadScript(filePath)
+	if err != nil {
+		log.Printf("Error in loading script: %v", err)
+	}
+
+	newEntry, err := json.Marshal(args)
 	if err != nil {
 		log.Printf("Error in marshalling Args: %v", err)
-	}
-
-	newEntry := Entry{
-		Mode: mode,
-		Args: marshalledArgs,
 	}
 
 	entries = append(entries, newEntry)
@@ -133,10 +94,59 @@ func PutInScript(mode Mode, args any) {
 		log.Printf("Error marshalling entries: %v", err)
 	}
 
-	err = os.WriteFile(filePath, out, 0644)
+	err = os.WriteFile(string(filePath), out, 0644)
 	if err != nil {
 		log.Printf("Error writing to file: %v", err)
 	}
 
 	fmt.Println("Stored to Script file")
+}
+
+func ExecuteScript() {
+	// entries, err := loadScript()
+	// if err != nil {
+	// 	log.Printf("Error in loading script: %v", err)
+	// 	return
+	// }
+	//
+	// for _, entry := range entries {
+	// 	switch entry.Mode {
+	// 	case ModeRepoRemove:
+	// 		var a RepoRemoveArgs
+	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
+	// 			log.Printf("Error in unmarshaling args: %v", err)
+	// 			return
+	// 		}
+	// 		GithubRepoRemove(a.Selected, a.DestPath)
+	// 	case ModeMakePublic:
+	// 		var a MakePublicArgs
+	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
+	// 			log.Printf("Error in unmarshaling args: %v", err)
+	// 			return
+	// 		}
+	// 		MakePublic(a.Selected)
+	// 	case ModeGroupSorter:
+	// 		var a GroupSorterArgs
+	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
+	// 			log.Printf("Error in unmarshaling args: %v", err)
+	// 			return
+	// 		}
+	// 		GroupSorter(a.Selected, a.GroupName)
+	// 	case ModeRename:
+	// 		var a RenameArgs
+	// 		if err := json.Unmarshal(entry.Args, &a); err != nil {
+	// 			log.Printf("Error in unmarshaling args: %v", err)
+	// 			return
+	// 		}
+	// 		renameProject(a.OldPath, a.NewName)
+	// 	}
+	// }
+	//
+	// err = os.Remove(filePath)
+	// if err != nil && !os.IsNotExist(err) {
+	// 	log.Printf("Error in removing script: %v", err)
+	// 	return
+	// }
+	//
+	// fmt.Println("Executed the Scripts! And cleared the file for future usage!")
 }

@@ -233,7 +233,7 @@ func main() {
 
 	if offlineMode {
 		scriptMode = true
-		fmt.Println("In Offline Mode, so changes will be saved to a script!\n")
+		fmt.Println("In Offline Mode, so changes will be saved to a script!")
 	} else {
 		fmt.Print("1) Script Mode or 2) Interactive Mode? >> ")
 		var offlineInput uint8
