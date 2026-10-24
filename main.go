@@ -168,41 +168,7 @@ func MakePublic(projectPaths []string) {
 	fmt.Printf("Failed: %v\n", failed)
 }
 
-func main() {
-	var scriptMode bool
-
-	if checkOfflineMode() {
-		scriptMode = true
-		fmt.Println("In Offline Mode, so changes will be saved to a script!\n")
-	} else {
-		fmt.Print("1) Script Mode or 2) Interactive Mode? >> ")
-		var offlineInput uint8
-		fmt.Scan(&offlineInput)
-		fmt.Print("\n")
-
-		if offlineInput == 2 {
-			scriptMode = false
-			fmt.Println("Using Interactive Mode")
-		} else {
-			scriptMode = true
-			fmt.Println("Using Script Mode")
-		}
-	}
-	fmt.Println()
-
-	fmt.Print("Which Mode do you want to enter?\n\n1) Git Clone\n2) Just Browse\n\n3) Group Sorter \n4) Make Public\n5) Remove\n\n6) Run Offline Scripts\n\n>> ")
-	var mode uint8
-	fmt.Scan(&mode)
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	if !slices.Contains([]uint8{1, 2, 3, 4, 5, 6}, mode) {
-		log.Fatal("Select one of 1, 2, 3, 4, 5, 6")
-	}
-
+func Main(mode uint8, scriptMode bool) {
 	if mode == 1 {
 		if scriptMode {
 			fmt.Println("Come back later with Internet!")
@@ -257,5 +223,67 @@ func main() {
 
 			GithubRepoRemove(selected, os.Getenv("REMOVED_DIR"))
 		}
+	}
+
+}
+
+func main() {
+	var scriptMode bool
+	offlineMode := checkOfflineMode()
+
+	if offlineMode {
+		scriptMode = true
+		fmt.Println("In Offline Mode, so changes will be saved to a script!\n")
+	} else {
+		fmt.Print("1) Script Mode or 2) Interactive Mode? >> ")
+		var offlineInput uint8
+		fmt.Scan(&offlineInput)
+		fmt.Print("\n")
+
+		if offlineInput == 2 {
+			scriptMode = false
+			fmt.Println("Using Interactive Mode")
+		} else {
+			scriptMode = true
+			fmt.Println("Using Script Mode")
+		}
+	}
+
+	validModes := make([]uint8, 5, 6)
+	validModes[0] = 1
+	validModes[1] = 2
+	validModes[2] = 3
+	validModes[3] = 4
+	validModes[4] = 5
+
+	invalidModeMsg := "Select one of 1, 2, 3, 4, 5"
+
+	if !offlineMode {
+		validModes[5] = 6
+		invalidModeMsg += ", 6"
+	}
+
+	for {
+		fmt.Println()
+
+		fmt.Print("Which Mode do you want to enter?\n\n1) Git Clone\n2) Just Browse\n\n3) Group Sorter \n4) Make Public\n5) Remove\n\n")
+		if !offlineMode {
+			fmt.Print("6) Run Offline Scripts\n\n")
+		}
+		fmt.Print(">> ")
+
+		var mode uint8
+		fmt.Scan(&mode)
+
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		if !slices.Contains(validModes, mode) {
+			log.Fatal(invalidModeMsg)
+		}
+
+		Main(mode, scriptMode)
 	}
 }

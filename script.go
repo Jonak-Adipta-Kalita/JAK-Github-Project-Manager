@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var filePath string = "offline-mode.json"
+var filePath string = "script-mode.json"
 
 // TODO: Add an order to the file! Like, Publics first, Renames at the end... etc..
 
@@ -107,7 +107,7 @@ func ExecuteScript() {
 		return
 	}
 
-	fmt.Println("Executed the Offline Scripts! And cleared the file for future usage!")
+	fmt.Println("Executed the Scripts! And cleared the file for future usage!")
 }
 
 func PutInScript(mode Mode, args any) {
@@ -138,5 +138,5 @@ func PutInScript(mode Mode, args any) {
 		log.Printf("Error writing to file: %v", err)
 	}
 
-	fmt.Println("Stored to Offline-Mode file")
+	fmt.Println("Stored to Script file")
 }
