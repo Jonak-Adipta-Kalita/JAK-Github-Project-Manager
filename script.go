@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 type FileName string
@@ -74,7 +75,7 @@ func loadScript[T Entry](filePath FileName) ([]T, error) {
 }
 
 func appendToScript[T Entry](filePath FileName, arg T) {
-	err := os.MkdirAll(string(filePath), 0755)
+	err := os.MkdirAll(filepath.Dir(string(filePath)), 0755)
 	if err != nil {
 		log.Printf("Error in creating parent folder: %v", err)
 		return
