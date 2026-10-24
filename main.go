@@ -199,8 +199,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	if !slices.Contains([]uint8{1, 2, 3, 4, 5}, mode) {
-		log.Fatal("Select one of 1, 2, 3, 4, 5")
+	if !slices.Contains([]uint8{1, 2, 3, 4, 5, 6}, mode) {
+		log.Fatal("Select one of 1, 2, 3, 4, 5, 6")
 	}
 
 	if mode == 1 {
@@ -210,6 +210,8 @@ func main() {
 		}
 
 		CloneRepositories()
+	} else if mode == 6 {
+		ExecuteScript()
 	} else {
 		selected := Tui(scriptMode)
 		fmt.Println()
@@ -222,12 +224,13 @@ func main() {
 		}
 
 		if mode == 3 {
+			// TODO: Auto Ability to JAK -> Tutorial with asked description of "Tutorial followed: <LINK>"
 			var groupName string
 			fmt.Print("Group Name (No Whitespace): ")
 			fmt.Scan(&groupName)
 
 			if scriptMode {
-				PutInOfflineScript(ModeGroupSorter, GroupSorterArgs{
+				PutInScript(ModeGroupSorter, GroupSorterArgs{
 					Selected:  selected,
 					GroupName: groupName,
 				})
@@ -236,15 +239,19 @@ func main() {
 
 			GroupSorter(selected, groupName)
 		} else if mode == 4 {
+			var doJAKToTutorial bool
+			fmt.Print("Is it for JAK -> Tutorial? (Y/N) ")
+			fmt.Scan(&doJAKToTutorial)
+
 			if scriptMode {
-				PutInOfflineScript(ModeMakePublic, MakePublicArgs{Selected: selected})
+				PutInScript(ModeMakePublic, MakePublicArgs{Selected: selected})
 				return
 			}
 
 			MakePublic(selected)
 		} else if mode == 5 {
 			if scriptMode {
-				PutInOfflineScript(ModeRepoRemove, RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
+				PutInScript(ModeRepoRemove, RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
 				return
 			}
 

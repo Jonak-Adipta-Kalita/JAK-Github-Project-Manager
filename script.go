@@ -9,6 +9,8 @@ import (
 
 var filePath string = "offline-mode.json"
 
+// TODO: Add an order to the file! Like, Publics first, Renames at the end... etc..
+
 type Mode string
 
 const (
@@ -42,7 +44,7 @@ type RepoRemoveArgs struct {
 	DestPath string   `json:"dest_path"`
 }
 
-func loadOfflineScript() ([]Entry, error) {
+func loadScript() ([]Entry, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -59,8 +61,8 @@ func loadOfflineScript() ([]Entry, error) {
 	return entries, nil
 }
 
-func ExecuteOfflineScript() {
-	entries, err := loadOfflineScript()
+func ExecuteScript() {
+	entries, err := loadScript()
 	if err != nil {
 		log.Printf("Error in loading offling-mode script: %v", err)
 		return
@@ -108,8 +110,8 @@ func ExecuteOfflineScript() {
 	fmt.Println("Executed the Offline Scripts! And cleared the file for future usage!")
 }
 
-func PutInOfflineScript(mode Mode, args any) {
-	entries, err := loadOfflineScript()
+func PutInScript(mode Mode, args any) {
+	entries, err := loadScript()
 	if err != nil {
 		log.Printf("Error in loading offling-mode script: %v", err)
 	}
