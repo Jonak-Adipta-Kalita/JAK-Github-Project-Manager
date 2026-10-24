@@ -83,5 +83,5 @@ func CloneRepositories() {
 	}
 
 	fmt.Println()
-	fmt.Println("Failed: %v", failed)
+	fmt.Printf("Failed: %v\n", failed)
 }

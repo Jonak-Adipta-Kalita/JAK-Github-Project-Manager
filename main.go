@@ -170,7 +170,7 @@ func MakePublic(projectPaths []string) {
 
 func Main(mode uint8, scriptMode bool) {
 	if mode == 1 {
-		if scriptMode {
+		if checkOfflineMode() {
 			fmt.Println("Come back later with Internet!")
 			return
 		}
@@ -263,14 +263,14 @@ func main() {
 	invalidModeMsg := "Select one of 1, 2, 3, 4, 5"
 
 	if !offlineMode {
-		validModes[5] = 6
+		validModes = append(validModes, 6)
 		invalidModeMsg += ", 6"
 	}
 
 	for {
 		fmt.Println()
 
-		fmt.Print("Which Mode do you want to enter?\n\n1) Git Clone\n2) Just Browse\n\n3) Group Sorter \n4) Make Public\n5) Remove\n\n")
+		fmt.Print("----------\n\nWhich Mode do you want to enter?\n\n1) Git Clone\n2) Just Browse\n\n3) Group Sorter \n4) Make Public\n5) Remove\n\n")
 		if !offlineMode {
 			fmt.Print("6) Run Offline Scripts\n\n")
 		}
