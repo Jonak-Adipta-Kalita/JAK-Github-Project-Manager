@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .inputContainer {
+        @apply space-y-1;
+    }
+
+    .inputLabels {
+        @apply text-gray-200 font-bold;
+    }
+
+    .inputs {
+        @apply w-64 h-10 px-4 py-2 font-bold bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 text-lg;
+    }
+}
