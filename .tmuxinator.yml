@@ -1,0 +1,6 @@
+name: JAK-Github-Project-Manager
+root: .
+
+windows:
+  - editor: nvim .
+  - commands:
