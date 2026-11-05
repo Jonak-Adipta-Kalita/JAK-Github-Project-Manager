@@ -26,6 +26,13 @@ const (
 	ModeRepoRemove  Mode = "REPO_REMOVE"
 )
 
+type MakePublicType string
+
+const (
+	NonTutorialType MakePublicType = "NonTutorialType"
+	TutorialType    MakePublicType = "TutorialType"
+)
+
 type Entry interface {
 	isArg()
 }
@@ -45,7 +52,9 @@ type GroupSorterArgs struct {
 func (GroupSorterArgs) isArg() {}
 
 type MakePublicArgs struct {
-	Selected []string `json:"selected"`
+	Type         MakePublicType `json:"type"`
+	Selected     []string       `json:"selected"`
+	Descriptions []string       `json:"descriptions"`
 }
 
 func (MakePublicArgs) isArg() {}
@@ -142,7 +151,13 @@ func ExecuteScript() {
 			return runFile(GROUP_SORTER_FILE, func(a GroupSorterArgs) { GroupSorter(a.Selected, a.GroupName) })
 		},
 		func() error {
-			return runFile(MAKE_PUBLIC_FILE, func(a MakePublicArgs) { MakePublic(a.Selected) })
+			return runFile(MAKE_PUBLIC_FILE, func(a MakePublicArgs) {
+				if a.Type == TutorialType {
+					JAKToTutorial(a.Selected, a.Descriptions)
+				} else if a.Type == NonTutorialType {
+					MakePublic(a.Selected)
+				}
+			})
 		},
 		func() error {
 			return runFile(RENAME_FILE, func(a RenameArgs) { RenameProject(a.OldPath, a.NewName) })

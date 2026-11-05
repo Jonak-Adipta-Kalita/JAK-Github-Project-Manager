@@ -148,26 +148,6 @@ func GroupSorter(projectPaths []string, groupName string) {
 	}
 }
 
-func MakePublic(projectPaths []string) {
-	var failed []string
-
-	for _, projectPath := range projectPaths {
-		name := filepath.Base(projectPath)
-		repo := fmt.Sprintf("%s/%s", os.Getenv("GITHUB_USERNAME"), name)
-
-		cmd := exec.Command("gh", "repo", "edit", repo, "--visibility", "public", "--accept-visibility-change-consequences")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Run(); err != nil {
-			log.Printf("Failed to make the repository %s public\n", repo)
-		}
-	}
-
-	fmt.Println()
-	fmt.Printf("Failed: %v\n", failed)
-}
-
 func Main(mode uint8, scriptMode bool) {
 	if mode == 1 {
 		if checkOfflineMode() {
@@ -190,7 +170,6 @@ func Main(mode uint8, scriptMode bool) {
 		}
 
 		if mode == 3 {
-			// TODO: Auto Ability to JAK -> Tutorial with asked description of "Tutorial followed: <LINK>"
 			var groupName string
 			fmt.Print("Group Name (No Whitespace): ")
 			fmt.Scan(&groupName)
@@ -205,19 +184,48 @@ func Main(mode uint8, scriptMode bool) {
 
 			GroupSorter(selected, groupName)
 		} else if mode == 4 {
-			var doJAKToTutorial bool
-			fmt.Print("Is it for JAK -> Tutorial? (Y/N) ")
+			var doJAKToTutorial string
+			fmt.Print("Is it for JAK -> Tutorial? (y/N) ")
 			fmt.Scan(&doJAKToTutorial)
+			fmt.Println()
 
-			if scriptMode {
-				PutInScript(MakePublicArgs{Selected: selected})
-				return
+			if strings.ToLower(doJAKToTutorial) == "y" {
+				descriptions := []string{}
+
+				for _, name := range selected {
+					var descriptionForJAK string
+					fmt.Printf("Link of the tutorial followed for %s: ", filepath.Base(name))
+					fmt.Scan(&descriptionForJAK)
+					descriptions = append(descriptions, "Tutorial followed: "+descriptionForJAK)
+				}
+
+				if scriptMode {
+					PutInScript(MakePublicArgs{
+						Type:         TutorialType,
+						Selected:     selected,
+						Descriptions: descriptions,
+					})
+					return
+				}
+
+				JAKToTutorial(selected, descriptions)
+			} else {
+				if scriptMode {
+					PutInScript(MakePublicArgs{
+						Type:     NonTutorialType,
+						Selected: selected,
+					})
+					return
+				}
+
+				MakePublic(selected)
 			}
-
-			MakePublic(selected)
 		} else if mode == 5 {
 			if scriptMode {
-				PutInScript(RepoRemoveArgs{Selected: selected, DestPath: os.Getenv("REMOVED_DIR")})
+				PutInScript(RepoRemoveArgs{
+					Selected: selected,
+					DestPath: os.Getenv("REMOVED_DIR"),
+				})
 				return
 			}
 
